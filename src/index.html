@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>移民局公示</title>
+  <style>
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: linear-gradient(135deg, #0b0f19 0%, #1a2942 100%); color: #fff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    .header { padding: 30px; text-align: center; border-bottom: 1px solid rgba(0, 210, 255, 0.3); background: rgba(15, 23, 42, 0.6); box-shadow: 0 4px 20px rgba(0,0,0,0.5); position: relative; }
+    .app-title { font-size: 32px; font-weight: 800; letter-spacing: 4px; color: #00d2ff; text-shadow: 0 0 20px rgba(0,210,255,0.4); }
+    .sub-title { margin-top: 10px; font-size: 14px; color: #94a3b8; }
+    .version-tag { color: #94a3b8; font-size: 12px; margin-top: 5px; opacity: 0.8; }
+    .settings-btn { position: absolute; top: 20px; right: 20px; background: rgba(0, 210, 255, 0.1); border: 1px solid rgba(0, 210, 255, 0.3); color: #00d2ff; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 18px; cursor: pointer; }
+    
+    .main-container { flex: 1; display: flex; justify-content: center; align-items: center; flex-direction: column; gap: 20px; padding: 20px; }
+    .action-btn { width: 90%; max-width: 600px; padding: 15px; font-size: 18px; font-weight: bold; background: linear-gradient(135deg, #00d2ff, #3a7bd5); color: #fff; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,210,255,0.3); transition: all 0.2s; }
+    .checkin-btn { width: 90%; max-width: 600px; padding: 15px; font-size: 18px; font-weight: bold; background: linear-gradient(135deg, #2ed573, #1e90ff); color: #fff; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(46,213,115,0.3); transition: all 0.2s; }
+    .coin-btn { width: 90%; max-width: 600px; padding: 15px; font-size: 18px; font-weight: bold; background: linear-gradient(135deg, #ffa502, #ff4757); color: #fff; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(255,165,2,0.3); transition: all 0.2s; }
+    .exchange-btn { width: 90%; max-width: 600px; padding: 15px; font-size: 18px; font-weight: bold; background: linear-gradient(135deg, #a55eea, #8854d0); color: #fff; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(165,94,234,0.3); transition: all 0.2s; }
+    .rules-btn { width: 90%; max-width: 600px; padding: 15px; font-size: 18px; font-weight: bold; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.3); color: #e2e8f0; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
+    
+    .action-btn:hover, .checkin-btn:hover, .coin-btn:hover, .exchange-btn:hover, .rules-btn:hover { transform: translateY(-2px); }
+    .action-btn.locked { background: #334155; color: #94a3b8; box-shadow: none; cursor: not-allowed; transform: none; }
+    .btn-tips { font-size: 13px; font-weight: normal; margin-left: 6px; opacity: 0.9; }
+
+    .admin-container { flex: 1; display: flex; justify-content: center; align-items: center; flex-direction: column; gap: 20px; padding: 20px; }
+    .admin-btn { position: absolute; bottom: 20px; right: 20px; font-size: 13px; color: #00d2ff; background: rgba(15, 23, 42, 0.8); border: 1px solid #00d2ff; padding: 8px 15px; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+    
+    .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .data-table th, .data-table td { border: 1px solid rgba(0, 210, 255, 0.2); padding: 8px; text-align: center; font-size: 13px; }
+    .data-table th { background: rgba(0, 210, 255, 0.15); color: #00d2ff; font-weight: bold; }
+    .data-table tr:nth-child(even) { background: rgba(255, 255, 255, 0.03); }
+    .section-header { background: rgba(255, 165, 0, 0.2); color: #ffa502; font-weight: bold; padding: 10px; border-radius: 8px; margin-top: 20px; margin-bottom: 10px; font-size: 15px; }
+    .grand-total { background: rgba(46, 213, 115, 0.2); color: #2ed573; font-weight: bold; padding: 15px; border-radius: 8px; margin-top: 20px; font-size: 18px; text-align: center; }
+    
+    .admin-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 1000; }
+    .admin-modal-overlay.active { display: flex; }
+    .admin-modal { background: #0f172a; border: 1px solid #00d2ff; border-radius: 16px; width: 90%; max-width: 600px; padding: 20px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.6); position: relative; }
+    .admin-modal-title { font-size: 18px; color: #00d2ff; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+    .admin-modal-close { position: absolute; top: 15px; right: 15px; background: rgba(255, 71, 87, 0.1); border: 1px solid rgba(255, 71, 87, 0.3); color: #ff4757; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+
+    /* 规章制度一级菜单 */
+    .menu-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 1000; }
+    .menu-overlay.active { display: flex; }
+    .menu-modal { background: #0f172a; border: 1px solid #ffa502; border-radius: 16px; width: 90%; max-width: 400px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); position: relative; }
+    .menu-close { position: absolute; top: 15px; right: 15px; background: rgba(255, 71, 87, 0.1); border: 1px solid rgba(255, 71, 87, 0.3); color: #ff4757; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    .menu-title { font-size: 18px; color: #00d2ff; margin-bottom: 20px; text-align: center; font-weight: bold; }
+    .menu-item { display: block; width: 100%; padding: 15px; margin-bottom: 10px; font-size: 16px; font-weight: bold; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.3); color: #e2e8f0; border-radius: 10px; cursor: pointer; text-align: center; transition: all 0.2s; }
+    .menu-item:hover { background: rgba(0, 210, 255, 0.2); border-color: #00d2ff; color: #fff; }
+
+    /* 条例与奖励弹窗样式 */
+    .rules-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 1000; }
+    .rules-modal-overlay.active { display: flex; }
+    .rules-modal { background: #0f172a; border: 1px solid #ffa502; border-radius: 16px; width: 92%; max-width: 600px; padding: 20px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.6); position: relative; }
+    .rules-close { position: absolute; top: 15px; right: 15px; background: rgba(255, 71, 87, 0.1); border: 1px solid rgba(255, 71, 87, 0.3); color: #ff4757; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    .rules-content { line-height: 1.8; font-size: 14px; color: #cbd5e1; }
+    .rules-content h2 { color: #ffa502; margin-top: 20px; margin-bottom: 10px; font-size: 16px; border-left: 3px solid #ffa502; padding-left: 10px; }
+    .rules-content h3 { color: #00d2ff; margin-top: 10px; font-size: 14px; }
+    .rules-content p { margin-bottom: 10px; }
+    .rules-content .highlight { color: #ff4757; font-weight: bold; }
+
+    /* 兑换弹窗样式 */
+    .exchange-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 1000; }
+    .exchange-modal-overlay.active { display: flex; }
+    .exchange-modal { background: #0f172a; border: 1px solid #00d2ff; border-radius: 16px; width: 92%; max-width: 500px; padding: 20px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.6); position: relative; }
+    .exchange-close { position: absolute; top: 15px; right: 15px; background: rgba(255, 71, 87, 0.1); border: 1px solid rgba(255, 71, 87, 0.3); color: #ff4757; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    .exchange-content { line-height: 1.8; font-size: 14px; color: #cbd5e1; }
+    .exchange-title { text-align: center; color: #00d2ff; font-size: 20px; font-weight: bold; margin-bottom: 15px; }
+    .price-box { background: rgba(255, 165, 0, 0.1); border: 1px solid rgba(255, 165, 0, 0.3); padding: 10px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-size: 18px; font-weight: bold; color: #ffa502; }
+    .item-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .item-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 15px; text-align: center; }
+    .item-card-icon { font-size: 24px; margin-bottom: 5px; }
+    .item-card-name { font-weight: bold; color: #fff; font-size: 14px; }
+
+    /* 晋升弹窗样式 */
+    .promo-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 1000; }
+    .promo-modal-overlay.active { display: flex; }
+    .promo-modal { background: #0f172a; border: 1px solid #00d2ff; border-radius: 16px; width: 92%; max-width: 500px; padding: 20px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.6); position: relative; }
+    .promo-close { position: absolute; top: 15px; right: 15px; background: rgba(255, 71, 87, 0.1); border: 1px solid rgba(255, 71, 87, 0.3); color: #ff4757; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    .promo-content { line-height: 1.8; font-size: 14px; color: #cbd5e1; }
+    .promo-title { text-align: center; color: #00d2ff; font-size: 20px; font-weight: bold; margin-bottom: 15px; }
+    .promo-list { margin-top: 15px; }
+    .promo-item { padding: 10px; border-bottom: 1px dashed rgba(255,255,255,0.1); }
+    .promo-item strong { color: #fff; }
+    .promo-item span { color: #ffa502; font-weight: bold; }
+    .promo-note { background: rgba(255, 165, 0, 0.1); border: 1px solid rgba(255, 165, 0, 0.3); padding: 10px; border-radius: 8px; margin-top: 15px; font-size: 13px; }
+
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 999; }
+    .modal-overlay.active { display: flex; }
+    .modal { background: #0f172a; border: 1px solid #00d2ff; border-radius: 16px; width: 90%; max-width: 400px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .modal-title { font-size: 18px; color: #00d2ff; margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+    .form-group { margin-bottom: 12px; }
+    .form-label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 6px; }
+    .form-input, .form-select { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #334155; background: #1e293b; color: #fff; outline: none; }
+    .form-input:focus, .form-select:focus { border-color: #00d2ff; }
+    .static-text { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #334155; background: #1e293b; color: #cbd5e1; font-size: 13px; }
+    .modal-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
+    .btn-cancel { background: #334155; border: none; color: #fff; padding: 8px 15px; border-radius: 8px; cursor: pointer; }
+    .btn-submit { background: #00d2ff; border: none; color: #000; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    .btn-on { background: #2ed573; border: none; color: #000; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    .btn-off { background: #ffa502; border: none; color: #000; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    .btn-danger { background: rgba(255, 71, 87, 0.1); border: 1px solid rgba(255, 71, 87, 0.3); color: #ff4757; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    .warning-text { font-size: 13px; color: #ffa502; line-height: 1.6; margin-bottom: 15px; }
+    .warning-box { background: rgba(255, 165, 0, 0.1); border: 1px solid rgba(255, 165, 0, 0.3); padding: 10px; border-radius: 8px; margin-bottom: 15px; }
+    .forgot-link { display: block; text-align: center; color: #94a3b8; font-size: 12px; margin-top: 10px; cursor: pointer; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div id="mainView">
+    <div class="header">
+      <div class="app-title">移民局公示</div>
+      <div class="sub-title">新入职人员信息登记与公示平台</div>
+      <div class="version-tag">版本 v3.2.2</div>
+      <div class="settings-btn" onclick="openSettings()">⚙️</div>
+    </div>
+    <div class="main-container">
+      <button class="action-btn" id="btnOpenForm" onclick="openForm()">📝 你的入职表 <span class="btn-tips" id="limitTips"></span></button>
+      <button class="checkin-btn" onclick="openCheckinModal()">⏰ 上班打卡</button>
+      <button class="coin-btn" onclick="openCoinModal()">🎁 新人接待币</button>
+      <button class="exchange-btn" onclick="openExchangeModal()">💎 赞助兑换</button>
+      <button class="rules-btn" onclick="openRuleMenu()">📋 规章制度</button>
+    </div>
+    <div class="admin-btn" onclick="openAdminLogin()">🔒 管理</div>
+  </div>
+
+  <div id="adminView" style="display:none;">
+    <div class="header">
+      <div class="app-title">移民局公示</div>
+      <div class="sub-title">后台管理视角（点击按钮查看数据）</div>
+      <div class="version-tag">版本 v3.2.2</div>
+      <div class="settings-btn" style="background: rgba(255,165,0,0.1); border-color: rgba(255,165,0,0.3); color: #ffa502;" onclick="closeAdminView()">⬅ 退出</div>
+    </div>
+    <div class="admin-container">
+      <button class="action-btn" onclick="viewAllRecords()" style="background: linear-gradient(135deg, #ffa502, #ff6348); color: #000;">📝 你的入职表</button>
+      <button class="checkin-btn" onclick="viewTodayCheckin()">📋 当日打卡明细</button>
+      <button class="checkin-btn" style="background: linear-gradient(135deg, #ffa502, #ff6348); color: #000;" onclick="viewThisWeekHours()">📊 本周工时统计</button>
+      <button class="coin-btn" onclick="viewThisWeekCoins()">🎁 本周接待币记录</button>
+      <button class="coin-btn" style="background: linear-gradient(135deg, #00d2ff, #3a7bd5);" onclick="viewHistoryCoins()">📜 历史登记记录</button>
+      <button class="coin-btn" style="background: linear-gradient(135deg, #a55eea, #8854d0);" onclick="viewLastWeekSummary()">📅 上周汇总报告</button>
+    </div>
+  </div>
+
+  <!-- 规章制度一级菜单 -->
+  <div class="menu-overlay" id="ruleMenuModal">
+    <div class="menu-modal">
+      <div class="menu-close" onclick="closeRuleMenu()">关闭</div>
+      <div class="menu-title">📋 规章制度</div>
+      <button class="menu-item" onclick="openRulesModal()">📜 内务公示</button>
+      <button class="menu-item" onclick="openRewardModal()">📢 举报奖励公示</button>
+      <button class="menu-item" onclick="openDressModal()">👕 移民局工装</button>
+      <button class="menu-item" onclick="openPromotionModal()">📈 公职晋升</button>
+    </div>
+  </div>
+
+  <!-- 赞助兑换弹窗 -->
+  <div class="exchange-modal-overlay" id="exchangeModal">
+    <div class="exchange-modal">
+      <div class="exchange-close" onclick="closeExchangeModal()">关闭</div>
+      <div class="exchange-content">
+        <div class="exchange-title">💎 赞助兑换中心</div>
+        <div class="price-box">1 个新人接待币 = 10 元</div>
+        <p style="text-align:center; font-weight:bold; margin-bottom:10px;">以下物品全部可以使用新人接待币兑换：</p>
+        <div class="item-grid">
+          <div class="item-card"><div class="item-card-icon">🔫</div><div class="item-card-name">赞助枪</div></div>
+          <div class="item-card"><div class="item-card-icon">🚗</div><div class="item-card-name">赞助车</div></div>
+          <div class="item-card"><div class="item-card-icon">💍</div><div class="item-card-name">饰品</div></div>
+          <div class="item-card"><div class="item-card-icon">🛹</div><div class="item-card-name">滑板</div></div>
+          <div class="item-card"><div class="item-card-icon">✨</div><div class="item-card-name">特效</div></div>
+        </div>
+        <div class="promo-note" style="margin-top: 20px; color: #ffa502; text-align: center;">
+          <strong>具体兑换所需币数，请前往 KOOK 查看最新价格表。</strong><br>
+          兑换请联系局长钦和进行操作。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 内务条例弹窗 -->
+  <div class="rules-modal-overlay" id="rulesModal">
+    <div class="rules-modal">
+      <div class="rules-close" onclick="closeRulesModal()">关闭</div>
+      <div class="rules-content">
+        <h1 style="text-align:center; color:#00d2ff; font-size:20px; margin-bottom:10px;">移民局内务条例</h1>
+        <p style="text-align:center; color:#94a3b8;">所有罚款50万～200万封顶，社区服务50～200次封顶，按违规严重程度分档执行。</p>
+        <h2>一、接待规范</h2><p><strong>核心原则：</strong>接待新市民必须走完整流程、用公车、开OBS录像。</p><h3>违规及处罚：</h3><p>· 未完成接待流程、未开公车、未开OBS，违反以上任一项，罚款100万、社区服务100次。</p><p>· 因未开OBS导致纠纷无法核实的，罚款200万、社区服务200次（封顶）。</p>
+        <h2>二、工作纪律</h2><p><strong>核心原则：</strong>上班可以自由活动、赚钱、到处溜达，但新市民来了必须优先接待。</p><h3>违规及处罚：</h3><p>1. 有新市民需要接待时，经提醒仍不回应或拒绝接待的：</p><p>· 首次：罚款100万、社区服务100次。</p><p>· 第二次：罚款200万、社区服务200次（封顶），开除、公黑。</p><p>2. 因个人活动导致接待被严重延误或造成恶劣后果的：</p><p>· 罚款200万、社区服务200次（封顶），开除、公黑。</p><p>3. 上班期间KOOK或游戏内长时间不回应工作消息，经提醒仍不回复的（视为挂机）：</p><p>· 首次：罚款100万、社区服务100次。</p><p>· 第二次：罚款200万、社区服务200次（封顶），开除、公黑。</p>
+        <h2>三、KOOK使用规范</h2><p><strong>核心原则：</strong>KOOK可以解答问题、帮助新人，但买新手车、办银行卡、拿三证件（身份证、驾照、枪支）这些事，KOOK办不了，必须让新人进游戏办理。</p><h3>具体规定：</h3><p>· 新人在KOOK咨询移民局地址、流程、材料等问题，必须耐心解答，帮助新人上手游戏。</p><p>· 涉及买新手车、办理银行卡、领取三证件（身份证、驾照、枪支）等业务，必须告知新人进入游戏内办理，引导其到游戏内走正式接待流程。</p><h3>违规及处罚：</h3><p>· 上班期间KOOK长时间不回应工作询问，经提醒仍不回复的（视为挂机）：</p><p>· 首次：罚款100万、社区服务100次。</p><p>· 第二次：罚款200万、社区服务200次（封顶），开除、公黑。</p>
+        <h2>四、公车管理</h2><p><strong>核心原则：</strong>公车要停好、锁好，不准改、不准换牌。</p><h3>违规及处罚：</h3><p>· 乱停乱放、未锁车门、改装、变更车牌，违反以上任一项：罚款100万、社区服务100次。</p><p>· 因上述行为导致公车被扣押或损坏的：罚款200万、社区服务200次（封顶），并追加赔偿。</p>
+        <h2>五、公共形象</h2><p><strong>核心原则：</strong>穿制服时不准做不雅、辱骂、嘲讽、性暗示等行为，不管上没上班。</p><h3>违规及处罚：</h3><p>· 首次违规：罚款100万、社区服务100次。</p><p>· 情节严重或第二次违规：罚款200万、社区服务200次（封顶）。</p>
+        <h2>六、内部关系</h2><p><strong>核心原则：</strong>不准公开顶撞、辱骂同事，不准搞小团体。</p><h3>违规及处罚：</h3><p>· 第一次：罚款100万、社区服务100次，书面警告。</p><p>· 第二次（或情节严重）：罚款200万、社区服务200次（封顶），降职一级。</p><p>· 第三次：罚款200万、社区服务200次（封顶），开除、公黑。</p>
+        <h2>七、跨职业素养</h2><p><strong>核心原则：</strong>跟其他职业的人发生争议时，不能先骂人，解决不了找领导。</p><h3>违规及处罚：</h3><p>· 擅自处理导致严重后果的：罚款200万、社区服务200次（封顶）。</p>
+        <h2>八、涉黑红线（零容忍）</h2><p>以下行为一经发现，直接开除、公黑，并罚款200万、社区服务200次（封顶），不警告、不缓冲：</p><p>一、挖掘、交易、持有违禁品；</p><p>二、与黑帮成员同车、拥抱等亲密行为；</p><p>三、在非法区域（采集地、洗钱点、佩岛、帮派基地）逗留；</p><p>四、拥有黑帮菜单；</p><p>五、直系亲属为黑帮成员；</p><p>六、任何触犯法律法规的行为。</p>
+        <h2>九、处罚阶梯（一般违规汇总）</h2><p>适用于第一条至第七条（不包含第八条涉黑红线）：</p><p>第一次违规： 按对应条款处罚，并给予书面警告。</p><p>第二次违规： 按对应条款的封顶档执行，即罚款200万、社区服务200次，并降职一级、留局察看。</p><p>第三次违规： 按对应条款的封顶档执行，即罚款200万、社区服务200次，并开除、公黑。</p><p><strong>涉黑红线（第八条）无论第几次，一经发现直接开除、公黑，不设警告、不设降职缓冲。</strong></p>
+        <h2>十、最终解释</h2><p>· 处罚以条例明文规定为准，不得自己编造解释。</p><p>· 条例修改须提前公示，公示期满后方可生效。</p>
+        <div style="margin-top:20px; text-align:right; color:#fff;"><p>制定：移民局局长 钦和</p><p>生效日期：即日起执行</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 举报奖励条例弹窗 -->
+  <div class="rules-modal-overlay" id="rewardModal">
+    <div class="rules-modal">
+      <div class="rules-close" onclick="closeRewardModal()">关闭</div>
+      <div class="rules-content">
+        <h1 style="text-align:center; color:#00d2ff; font-size:20px; margin-bottom:10px;">移民局举报奖励办法</h1>
+        <p style="text-align:center; color:#94a3b8;">本办法与《移民局内务条例》配套执行，独立发布于公告区。</p>
+        <h2>举报要求</h2><p>鼓励内部互相监督，举报他人违规行为须提供OBS录屏作为证据，无证据不予受理。</p>
+        <h2>奖励标准（经查属实）</h2><p><strong>一般违规</strong>（《移民局内务条例》第一至第七条）：奖励举报人 <span class="highlight">100万</span>。</p><p><strong>涉黑违规</strong>（《移民局内务条例》第八条，零容忍条款）：奖励举报人 <span class="highlight">150万（封顶）</span>。</p>
+        <h2>举报规则</h2><p>· 每项违规限举报一次，多人举报同一事项以最先提供有效证据者为准。</p><p>· 恶意举报、诬告一经查实，罚款100万、社区服务50次。</p>
+        <h2>举报渠道</h2><p>私信局长钦和，匿名亦可。</p>
+        <div style="margin-top:20px; text-align:right; color:#fff;"><p>制定：移民局局长 钦和</p><p>生效日期：即日起执行</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 移民局工装弹窗 -->
+  <div class="rules-modal-overlay" id="dressModal">
+    <div class="rules-modal">
+      <div class="rules-close" onclick="closeDressModal()">关闭</div>
+      <div class="rules-content">
+        <h1 style="text-align:center; color:#00d2ff; font-size:20px; margin-bottom:10px;">👕 移民局工装</h1>
+        <p style="text-align:center; font-weight:bold; margin-bottom:15px;">工装说明</p>
+        <p style="text-align:center; margin-bottom:10px;">除了工装不变，其他都可以带</p>
+        <p style="text-align:center; color:#94a3b8; margin-bottom:5px;">下面的服装代码是通用的</p>
+        <p style="text-align:center; color:#94a3b8;">"暂时"的服装，有更好的服装，直接联系局长，按照你们的审美来不要花里胡哨，要正式一点</p>
+        <div style="margin-top:15px;">
+          <div style="font-weight:bold; margin-bottom:5px;">男生（代码）</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; color:#000; border-radius:8px; padding:10px; font-family:monospace; font-weight:bold; font-size:16px; margin-bottom:10px;">
+            <span>Lb5PrnaPqr</span>
+            <button style="background:#00d2ff; color:#000; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:bold;" onclick="copyDressCode('Lb5PrnaPqr')">📋 复制</button>
+          </div>
+          <div style="font-weight:bold; margin-bottom:5px;">女生（代码）</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; color:#000; border-radius:8px; padding:10px; font-family:monospace; font-weight:bold; font-size:16px; margin-bottom:10px;">
+            <span>1iqrm3GDna</span>
+            <button style="background:#00d2ff; color:#000; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:bold;" onclick="copyDressCode('1iqrm3GDna')">📋 复制</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 公职晋升弹窗 -->
+  <div class="promo-modal-overlay" id="promotionModal">
+    <div class="promo-modal">
+      <div class="promo-close" onclick="closePromotionModal()">关闭</div>
+      <div class="promo-content">
+        <div class="promo-title">📈 移民局公职晋升条件</div>
+        <div class="promo-list">
+          <div class="promo-item"><strong>实习→正式</strong>：累计获得 <span>30个</span> 新人接待币，累计在线满 <span>24小时</span></div>
+          <div class="promo-item"><strong>正式→资深</strong>：累计获得 <span>60个</span> 新人接待币，累计在线满 <span>72小时</span></div>
+          <div class="promo-item"><strong>资深→副主管</strong>：累计获得 <span>100个</span> 新人接待币，累计在线满 <span>120小时</span></div>
+          <div class="promo-item"><strong>副主管→主管</strong>：累计获得 <span>150个</span> 新人接待币，累计在线满 <span>180小时</span></div>
+          <div class="promo-item"><strong>主管→副主任</strong>：累计获得 <span>200个</span> 新人接待币，累计在线满 <span>240小时</span></div>
+          <div class="promo-item"><strong>副主任→主任</strong>：累计获得 <span>250个</span> 新人接待币，累计在线满 <span>300小时</span></div>
+          <div class="promo-item"><strong>主任→副局长</strong>：累计获得 <span>300个</span> 新人接待币，累计在线满 <span>360小时</span>，带出 <span>5名</span> 主任</div>
+        </div>
+        <div class="promo-note">
+          <strong>补充说明：</strong><br>
+          · 晋升不消耗新人接待币，只看累计获得数量。<br>
+          · 在线时长从入职起累计计算，只统计实际在线时间，退游戏不计时。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 管理员查看大弹窗 -->
+  <div class="admin-modal-overlay" id="adminDataModal">
+    <div class="admin-modal">
+      <div class="admin-modal-close" onclick="closeAdminData()">关闭</div>
+      <div id="adminModalContent"></div>
+    </div>
+  </div>
+
+  <!-- 免责声明弹窗 -->
+  <div class="modal-overlay" id="disclaimerModal">
+    <div class="modal" style="text-align: center;">
+      <div class="modal-title" style="color: var(--danger-color);">⚠️ 法律与隐私声明</div>
+      <div class="warning-box">
+        <div class="warning-text">本应用为内部专用工具，涉及敏感信息，仅限特定人员使用。</div>
+        <div class="warning-text" style="font-weight: bold; color: #fff;">严禁外传、非法截图、泄露数据。<br>外传者将追究法律责任！</div>
+      </div>
+      <div class="modal-actions" style="justify-content: center;"><button class="btn-submit" onclick="agreeToDisclaimer()">我已阅读并同意</button></div>
+    </div>
+  </div>
+
+  <!-- 首次设置密码弹窗（已加入关闭按钮） -->
+  <div class="modal-overlay" id="setPasswordModal">
+    <div class="modal">
+      <div class="modal-title">🔐 首次使用，请设置管理员密码</div>
+      <div class="form-group"><label class="form-label">绑定IC名（用于找回密码）</label><input type="text" class="form-input" id="setIc" placeholder="请输入你的IC名"></div>
+      <div class="form-group"><label class="form-label">设置新密码</label><input type="password" class="form-input" id="setPass1" placeholder="请输入密码"></div>
+      <div class="form-group"><label class="form-label">确认新密码</label><input type="password" class="form-input" id="setPass2" placeholder="请再次输入密码"></div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeSetPasswordModal()">关闭</button>
+        <button class="btn-submit" onclick="setNewPassword()">确认设置</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 输入密码登录弹窗 -->
+  <div class="modal-overlay" id="adminLoginModal">
+    <div class="modal">
+      <div class="modal-title">🔐 管理员验证</div>
+      <div class="form-group"><label class="form-label">请输入您设置的密码</label><input type="password" class="form-input" id="adminPass" placeholder="请输入密码"></div>
+      <div class="modal-actions"><button class="btn-cancel" onclick="closeAdminLogin()">取消</button><button class="btn-submit" onclick="checkAdminPass()">确认进入</button></div>
+      <div class="forgot-link" onclick="openForgotModal()">忘记密码？</div>
+    </div>
+  </div>
+
+  <!-- 找回密码弹窗 -->
+  <div class="modal-overlay" id="forgotPasswordModal">
+    <div class="modal" style="text-align: center;">
+      <div class="modal-title" style="color: #ffa502;">🔑 找回密码</div>
+      <div class="warning-text">请输入您设置密码时绑定的IC名</div>
+      <div class="form-group"><input type="text" class="form-input" id="forgotIc" placeholder="请输入绑定IC名"></div>
+      <div class="modal-actions" style="justify-content: center;"><button class="btn-cancel" onclick="closeForgotModal()">取消</button><button class="btn-submit" onclick="findPassword()">确认找回</button></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal">
+      <div class="modal-title">⚙️ 设置</div>
+      <div class="warning-box"><div class="warning-text" style="margin-bottom: 5px; font-weight: bold;">⚠️ 删除本地信息将清空所有填写的资料、次数限制和密码，且无法恢复！</div></div>
+      <div class="modal-actions" style="justify-content: center;"><button class="btn-cancel" onclick="closeSettings()">取消</button><button class="btn-danger" onclick="resetApp()">删除本地信息 / 重置</button></div>
+    </div>
+  </div>
+
+  <!-- 入职填写弹窗 -->
+  <div class="modal-overlay" id="formModal">
+    <div class="modal">
+      <div class="modal-title">你的入职登记</div>
+      <div class="form-group"><label class="form-label">IC 名</label><input type="text" class="form-input" id="inpName" placeholder="请输入 IC 名"></div>
+      <div class="form-group"><label class="form-label">IC 电话</label><input type="text" class="form-input" id="inpPhone" placeholder="请输入联系电话"></div>
+      <div class="form-group"><label class="form-label">考核人</label><input type="text" class="form-input" id="inpAssessor" placeholder="请输入考核人姓名"></div>
+      <div class="form-group"><label class="form-label">师傅</label><input type="text" class="form-input" id="inpMaster" placeholder="请输入师傅姓名"></div>
+      <div class="form-group"><label class="form-label">部门</label><div class="static-text">无部门</div></div>
+      <div class="form-group"><label class="form-label">职位</label><div class="static-text">实习</div></div>
+      <div class="form-group"><label class="form-label">入职时间</label><input type="datetime-local" class="form-input" id="inpDate"></div>
+      <div class="modal-actions"><button class="btn-cancel" onclick="closeForm()">取消</button><button class="btn-submit" onclick="saveForm()">确认提交</button></div>
+    </div>
+  </div>
+
+  <!-- 上班打卡弹窗 -->
+  <div class="modal-overlay" id="checkinModal">
+    <div class="modal">
+      <div class="modal-title">⏰ 上班打卡</div>
+      <div class="warning-box" style="background: rgba(255,71,87,0.1); border-color: rgba(255,71,87,0.3);">
+        <div class="warning-text" style="color:#ff4757; font-weight: bold;">注意：下班时请点击“下班”按钮，不要误点“上班”！</div>
+      </div>
+      <div class="form-group"><label class="form-label">IC 名</label><input type="text" class="form-input" id="checkinIc" placeholder="请输入 IC 名"></div>
+      <div class="form-group">
+        <label class="form-label">当前时间</label>
+        <div class="static-text" id="currentTimeDisplay">--:--</div>
+      </div>
+      <div class="modal-actions" style="justify-content: space-between;">
+        <button class="btn-cancel" onclick="closeCheckinModal()">取消</button>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn-on" onclick="performCheckin('on')">上班</button>
+          <button class="btn-off" onclick="performCheckin('off')">下班</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="coinModal">
+    <div class="modal">
+      <div class="modal-title">🎁 新人接待币登记</div>
+      <div class="form-group"><label class="form-label">是否为团队入驻</label><select class="form-select" id="coinIsTeam" onchange="toggleTeamInfo()"><option value="否">否</option><option value="是">是</option></select></div>
+      <div id="teamInfoGroup" style="display: none;"><div class="form-group"><label class="form-label">团队人数</label><input type="number" class="form-input" id="coinTeamCount" placeholder="请输入人数"></div></div>
+      <div class="form-group"><label class="form-label">带的人IC名</label><input type="text" class="form-input" id="coinLeader" placeholder="请输入带的人IC名"></div>
+      <div class="form-group"><label class="form-label">被带的人IC名</label><input type="text" class="form-input" id="coinNewbie" placeholder="请输入被带的人IC名"></div>
+      <div class="form-group"><label class="form-label">新人接待币数量</label><input type="number" class="form-input" id="coinAmount" placeholder="请输入数量"></div>
+      <div class="form-group"><label class="form-label">时间（几点几分）</label><input type="datetime-local" class="form-input" id="coinTime"></div>
+      <div class="modal-actions"><button class="btn-cancel" onclick="closeCoinModal()">取消</button><button class="btn-submit" onclick="saveCoinRecord()">确认登记</button></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="weeklyReminderModal">
+    <div class="modal" style="text-align: center;">
+      <div class="modal-title" style="color: #ffa502;">📊 新的一周开始啦</div>
+      <div class="warning-text">请前往管理员界面点击“上周汇总报告”，并将截图发给钦和局长。</div>
+      <div class="modal-actions" style="justify-content: center;"><button class="btn-submit" onclick="closeWeeklyReminder()">知道了</button></div>
+    </div>
+  </div>
+
+  <script>
+    const DATA_KEY = 'immigration_public_data';
+    const PASS_KEY = 'immigration_admin_password';
+    const IC_KEY = 'immigration_admin_ic';
+    const CHECKIN_KEY = 'immigration_checkin_data';
+    const COIN_KEY = 'immigration_coin_records'; 
+    const HISTORY_KEY = 'immigration_coin_history'; 
+    const TOTAL_KEY = 'immigration_coin_total';     
+    const LAST_ARCHIVE_KEY = 'immigration_last_archive_date'; 
+    const WEEKLY_REMINDER_KEY = 'immigration_weekly_reminder_date';
+    const DISCLAIMER_AGREED_KEY = 'immigration_disclaimer_agreed';
+
+    let publicData = JSON.parse(localStorage.getItem(DATA_KEY)) || [];
+    let checkinRecords = JSON.parse(localStorage.getItem(CHECKIN_KEY)) || [];
+    let coinRecords = JSON.parse(localStorage.getItem(COIN_KEY)) || []; 
+    let historyRecords = JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; 
+    let totalCoins = parseInt(localStorage.getItem(TOTAL_KEY)) || 0;
+    let isCheckinLock = false; 
+
+    function autoArchiveOnMonday() {
+        const now = new Date();
+        const dayOfWeek = now.getDay();
+        const todayStr = now.toDateString();
+        const lastArchive = localStorage.getItem(LAST_ARCHIVE_KEY);
+
+        if (dayOfWeek === 1 && lastArchive !== todayStr) {
+            if (coinRecords.length > 0) {
+                let weekTotal = 0;
+                coinRecords.forEach(item => { weekTotal += parseInt(item.amount) || 0; });
+                historyRecords.unshift({
+                    weekStart: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+                    weekEnd: new Date().toLocaleDateString(),
+                    data: coinRecords,
+                    weekTotal: weekTotal
+                });
+                totalCoins += weekTotal;
+                localStorage.setItem(HISTORY_KEY, JSON.stringify(historyRecords));
+                localStorage.setItem(TOTAL_KEY, String(totalCoins));
+                localStorage.setItem(COIN_KEY, JSON.stringify([]));
+                coinRecords = [];
+            }
+            localStorage.setItem(LAST_ARCHIVE_KEY, todayStr);
+        }
+    }
+
+    // 改为一次性
+    function updateUI() {
+        const btn = document.getElementById('btnOpenForm');
+        if (publicData.length > 0) { 
+            btn.classList.add('locked'); 
+            btn.innerHTML = `📝 你的入职表 <span class="btn-tips">(一次性的，除非删数据)</span>`; 
+        } else { 
+            btn.classList.remove('locked'); 
+            btn.innerHTML = `📝 你的入职表 <span class="btn-tips">(一次性的，除非删数据)</span>`; 
+        }
+    }
+
+    function agreeToDisclaimer() { 
+        localStorage.setItem(DISCLAIMER_AGREED_KEY, 'true');
+        document.getElementById('disclaimerModal').classList.remove('active'); 
+    }
+
+    function checkDisclaimer() {
+        const agreed = localStorage.getItem(DISCLAIMER_AGREED_KEY);
+        if (!agreed) {
+            document.getElementById('disclaimerModal').classList.add('active');
+        }
+    }
+
+    function openSettings() { document.getElementById('settingsModal').classList.add('active'); }
+    function closeSettings() { document.getElementById('settingsModal').classList.remove('active'); }
+    function resetApp() { if (confirm("确定要删除所有本地信息并进行重置吗？该操作不可恢复！")) { localStorage.clear(); alert("重置成功，应用已回到初始状态。如果不再使用，可以直接卸载应用，不会占用空间。"); window.location.reload(); } }
+
+    function openRuleMenu() { document.getElementById('ruleMenuModal').classList.add('active'); }
+    function closeRuleMenu() { document.getElementById('ruleMenuModal').classList.remove('active'); }
+    
+    function openExchangeModal() { document.getElementById('exchangeModal').classList.add('active'); }
+    function closeExchangeModal() { document.getElementById('exchangeModal').classList.remove('active'); }
+    
+    function openRulesModal() { closeRuleMenu(); document.getElementById('rulesModal').classList.add('active'); }
+    function closeRulesModal() { document.getElementById('rulesModal').classList.remove('active'); }
+    function openRewardModal() { closeRuleMenu(); document.getElementById('rewardModal').classList.add('active'); }
+    function closeRewardModal() { document.getElementById('rewardModal').classList.remove('active'); }
+    function openDressModal() { closeRuleMenu(); document.getElementById('dressModal').classList.add('active'); }
+    function closeDressModal() { document.getElementById('dressModal').classList.remove('active'); }
+    function openPromotionModal() { closeRuleMenu(); document.getElementById('promotionModal').classList.add('active'); }
+    function closePromotionModal() { document.getElementById('promotionModal').classList.remove('active'); }
+
+    // 修复工装代码复制功能
+    function copyDressCode(code) {
+        try {
+            const textarea = document.createElement('textarea');
+            textarea.value = code;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            const successful = document.execCommand('copy');
+            document.body.removeChild(textarea);
+
+            if (successful) {
+                alert("代码已复制：" + code);
+                return;
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(code).then(() => {
+                    alert("代码已复制：" + code);
+                }).catch(() => {
+                    alert("复制失败，请手动长按选择复制：" + code);
+                });
+            } else {
+                alert("复制失败，请手动复制：" + code);
+            }
+        } catch (e) {
+            alert("复制失败，请手动复制：" + code);
+        }
+    }
+
+    // ★ 入职表：必须没填过才能进，且只能填一次！
+    function openForm() {
+        if (publicData.length > 0) { 
+            alert("您已完成入职填写，无法再次更改（如需修改请进入设置删除数据）！"); 
+            return; 
+        }
+        document.getElementById('formModal').classList.add('active');
+        let now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('inpDate').value = now.toISOString().slice(0, 16);
+    }
+    function closeForm() { document.getElementById('formModal').classList.remove('active'); }
+    function saveForm() {
+        if (publicData.length > 0) { alert("您已完成入职填写，无法再次更改！"); return; }
+
+        const name = document.getElementById('inpName').value.trim();
+        const phone = document.getElementById('inpPhone').value.trim();
+        const assessor = document.getElementById('inpAssessor').value.trim();
+        const master = document.getElementById('inpMaster').value.trim();
+        const date = document.getElementById('inpDate').value;
+        if (!name) { alert("请输入 IC 名！"); return; }
+        if (!phone) { alert("请输入 IC 电话！"); return; }
+        if (!assessor) { alert("请输入考核人！"); return; }
+        if (!master) { alert("请输入师傅！"); return; }
+
+        const newData = { name, phone, assessor, master, dept: "无部门", role: "实习", date };
+        publicData.unshift(newData); localStorage.setItem(DATA_KEY, JSON.stringify(publicData));
+        
+        document.getElementById('inpName').value = ''; document.getElementById('inpPhone').value = ''; document.getElementById('inpAssessor').value = ''; document.getElementById('inpMaster').value = '';
+        document.getElementById('formModal').classList.remove('active');
+        updateUI();
+        alert("入职填写成功！以后将无法更改，除非删数据。");
+    }
+
+    // ★ 必须填写了入职表才能打卡和记接待币！
+    function openCheckinModal() {
+        if (publicData.length === 0) { alert("请先填写你的入职表！"); return; }
+        document.getElementById('checkinIc').value = '';
+        document.getElementById('checkinModal').classList.add('active');
+        updateCurrentTime(); 
+        if (window.checkinTimer) clearInterval(window.checkinTimer); 
+        window.checkinTimer = setInterval(updateCurrentTime, 1000);
+    }
+
+    function updateCurrentTime() { 
+        const now = new Date(); 
+        const timeStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0') + ' ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0'); 
+        document.getElementById('currentTimeDisplay').innerText = timeStr; 
+    }
+
+    function closeCheckinModal() { 
+        clearInterval(window.checkinTimer); 
+        document.getElementById('checkinModal').classList.remove('active'); 
+        isCheckinLock = false;
+    }
+
+    // ★ 支持一天多次上下班（班次制）
+    function performCheckin(type) {
+        if (isCheckinLock) return; 
+        const icName = document.getElementById('checkinIc').value.trim();
+        if (!icName) { alert("请输入 IC 名！"); return; }
+
+        isCheckinLock = true;
+        const now = new Date();
+        const timeStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0') + ' ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+        const todayStr = timeStr.split(' ')[0];
+
+        // 找到今天该IC名的记录
+        let record = checkinRecords.find(r => r.icName === icName && r.date === todayStr);
+        if (!record) {
+            record = { icName: icName, date: todayStr, sessions: [] };
+            checkinRecords.push(record);
+        }
+
+        if (type === 'on') {
+            record.sessions.push({ onTime: timeStr, offTime: null });
+            alert("上班打卡成功！");
+        } else if (type === 'off') {
+            let lastOpenSession = null;
+            for (let i = record.sessions.length - 1; i >= 0; i--) {
+                if (record.sessions[i].offTime === null || record.sessions[i].offTime === '') {
+                    lastOpenSession = record.sessions[i];
+                    break;
+                }
+            }
+            if (!lastOpenSession) {
+                alert("请先打上班卡，再打下班卡！");
+                isCheckinLock = false;
+                return;
+            }
+            lastOpenSession.offTime = timeStr;
+            alert("下班打卡成功！");
+        }
+
+        localStorage.setItem(CHECKIN_KEY, JSON.stringify(checkinRecords));
+        setTimeout(() => { closeCheckinModal(); }, 100); 
+    }
+
+    function openCoinModal() { 
+        if (publicData.length === 0) { alert("请先填写你的入职表！"); return; }
+        document.getElementById('coinIsTeam').value = '否'; toggleTeamInfo(); document.getElementById('coinLeader').value = ''; document.getElementById('coinNewbie').value = ''; document.getElementById('coinAmount').value = ''; document.getElementById('coinTeamCount').value = ''; const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); document.getElementById('coinTime').value = now.toISOString().slice(0, 16); document.getElementById('coinModal').classList.add('active'); }
+    function closeCoinModal() { document.getElementById('coinModal').classList.remove('active'); }
+    function saveCoinRecord() {
+        const isTeam = document.getElementById('coinIsTeam').value;
+        const leader = document.getElementById('coinLeader').value.trim();
+        const newbie = document.getElementById('coinNewbie').value.trim();
+        const amount = document.getElementById('coinAmount').value;
+        const time = document.getElementById('coinTime').value;
+        if (!leader) { alert("请输入带的人IC名！"); return; }
+        if (!newbie) { alert("请输入被带的人IC名！"); return; }
+        if (!amount || parseInt(amount) <= 0) { alert("请输入正确的接待币数量！"); return; }
+        let newRecord;
+        if (isTeam === '是') { const teamCount = document.getElementById('coinTeamCount').value.trim(); if (!teamCount || parseInt(teamCount) <= 0) { alert("请输入正确的团队人数！"); return; } newRecord = { isTeam, teamCount, leader, newbie, amount, time }; }
+        else { newRecord = { isTeam, leader, newbie, amount, time }; }
+        coinRecords.unshift(newRecord); localStorage.setItem(COIN_KEY, JSON.stringify(coinRecords));
+        document.getElementById('coinLeader').value = ''; document.getElementById('coinNewbie').value = ''; document.getElementById('coinAmount').value = '';
+        closeCoinModal(); alert("新人接待币登记成功！");
+    }
+
+    function toggleTeamInfo() { const isTeam = document.getElementById('coinIsTeam').value; const teamInfoGroup = document.getElementById('teamInfoGroup'); if (isTeam === '是') { teamInfoGroup.style.display = 'block'; } else { teamInfoGroup.style.display = 'none'; } }
+
+    // ★ 新增：关闭设置密码弹窗
+    function closeSetPasswordModal() {
+        document.getElementById('setPasswordModal').classList.remove('active');
+    }
+
+    function openAdminLogin() {
+        const savedPass = localStorage.getItem(PASS_KEY); document.getElementById('adminPass').value = '';
+        if (!savedPass) { document.getElementById('setIc').value = ''; document.getElementById('setPass1').value = ''; document.getElementById('setPass2').value = ''; document.getElementById('setPasswordModal').classList.add('active'); }
+        else { document.getElementById('adminLoginModal').classList.add('active'); }
+    }
+    function setNewPassword() {
+        const icName = document.getElementById('setIc').value.trim(); const pass1 = document.getElementById('setPass1').value; const pass2 = document.getElementById('setPass2').value;
+        if (!icName) { alert("请务必填写IC名，用于找回密码！"); return; }
+        if (!pass1) { alert("请输入密码！"); return; }
+        if (pass1.length < 4) { alert("密码至少需要4位！"); return; }
+        if (pass1 !== pass2) { alert("两次输入的密码不一致，请重新输入！"); return; }
+        localStorage.setItem(IC_KEY, icName); localStorage.setItem(PASS_KEY, pass1); document.getElementById('setPasswordModal').classList.remove('active'); alert("密码设置成功！请牢记该密码。"); showAdminView();
+    }
+    function closeAdminLogin() { document.getElementById('adminLoginModal').classList.remove('active'); }
+    function openForgotModal() { document.getElementById('forgotIc').value = ''; document.getElementById('adminLoginModal').classList.remove('active'); document.getElementById('forgotPasswordModal').classList.add('active'); }
+    function closeForgotModal() { document.getElementById('forgotPasswordModal').classList.remove('active'); }
+    function findPassword() {
+        const inputIc = document.getElementById('forgotIc').value.trim(); const storedIc = localStorage.getItem(IC_KEY);
+        if (!storedIc) { alert("未找到绑定的IC名，无法找回。"); return; }
+        if (inputIc === storedIc) { const realPass = localStorage.getItem(PASS_KEY); alert(`验证成功！您的密码是：${realPass}\n（请牢记，切勿泄露）`); closeForgotModal(); }
+        else { alert("输入的IC名不正确，无法找回密码！"); }
+    }
+    function checkAdminPass() {
+        const pass = document.getElementById('adminPass').value; const savedPass = localStorage.getItem(PASS_KEY);
+        if (pass === savedPass) { closeAdminLogin(); showAdminView(); } else { alert("密码错误，无法进入统计后台！"); }
+    }
+    function showAdminView() { document.getElementById('mainView').style.display = 'none'; document.getElementById('adminView').style.display = 'block'; }
+    function closeAdminView() { document.getElementById('adminView').style.display = 'none'; document.getElementById('mainView').style.display = 'block'; }
+
+    function showAdminData(html, title) {
+        document.getElementById('adminModalContent').innerHTML = `<div class="admin-modal-title">${title}</div>` + html;
+        document.getElementById('adminDataModal').classList.add('active');
+    }
+    function closeAdminData() { document.getElementById('adminDataModal').classList.remove('active'); }
+
+    function viewAllRecords() {
+        if (publicData.length === 0) { alert("暂无数据，无法生成名单。"); return; }
+        let html = `<div class="section-header">📝 你的入职表</div>`;
+        html += `<table class="data-table"><tr><th>序号</th><th>IC名</th><th>电话</th><th>考核人</th><th>师傅</th><th>时间</th></tr>`;
+        publicData.forEach((item, index) => {
+            html += `<tr><td>${index+1}</td><td>${item.name}</td><td>${item.phone}</td><td>${item.assessor}</td><td>${item.master}</td><td>${item.date}</td></tr>`;
+        });
+        html += `</table>`;
+        showAdminData(html, "📝 你的入职表");
+    }
+
+    function viewTodayCheckin() {
+        if (checkinRecords.length === 0) { alert("暂无打卡数据。"); return; }
+        const today = new Date(); const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+        const todayRecords = checkinRecords.filter(r => r.date === todayStr);
+        if (todayRecords.length === 0) { alert("今天暂无打卡数据。"); return; }
+        let html = `<div class="section-header">📋 今日打卡明细</div>`;
+        html += `<table class="data-table"><tr><th>IC名</th><th>上班</th><th>下班</th></tr>`;
+        todayRecords.forEach((item) => {
+            item.sessions.forEach(s => {
+                html += `<tr><td>${item.icName}</td><td>${s.onTime || '未打卡'}</td><td>${s.offTime || '未打卡'}</td></tr>`;
+            });
+        });
+        html += `</table>`;
+        showAdminData(html, "📋 当日打卡明细");
+    }
+
+    // ★ 工时计算改为 0.00 格式
+    function viewThisWeekHours() {
+        const now = new Date(); const dayOfWeek = now.getDay(); const daysSinceMonday = (dayOfWeek === 0) ? 6 : dayOfWeek - 1;
+        const monday = new Date(now); monday.setDate(now.getDate() - daysSinceMonday); monday.setHours(0, 0, 0, 0);
+        const weekRecords = checkinRecords.filter(r => { const recordDate = new Date(r.date); return recordDate >= monday; });
+        if (weekRecords.length === 0) { alert("本周暂无打卡数据！"); return; }
+        const grouped = {}; weekRecords.forEach(r => { 
+            if (!grouped[r.icName]) grouped[r.icName] = { totalMinutes: 0 }; 
+            if (r.sessions) {
+                r.sessions.forEach(s => {
+                    if (s.onTime && s.offTime) {
+                        const on = new Date(s.onTime.replace(' ', 'T'));
+                        const off = new Date(s.offTime.replace(' ', 'T'));
+                        if (off >= on) {
+                            const diffMs = off - on;
+                            grouped[r.icName].totalMinutes += diffMs / 60000;
+                        }
+                    }
+                });
+            }
+        });
+        let html = `<div class="section-header">📊 本周工时统计</div>`;
+        html += `<table class="data-table"><tr><th>IC名</th><th>本周工时</th></tr>`;
+        for (let icName in grouped) { const totalHours = (grouped[icName].totalMinutes / 60).toFixed(2); html += `<tr><td>${icName}</td><td>${totalHours} 小时</td></tr>`; }
+        html += `</table>`;
+        showAdminData(html, "📊 本周工时统计");
+    }
+
+    function viewThisWeekCoins() {
+        if (coinRecords.length === 0) { alert("本周暂无接待币记录！"); return; }
+        let html = `<div class="section-header">🎁 本周接待币记录</div>`;
+        html += `<table class="data-table"><tr><th>类型</th><th>带的人</th><th>被带的人</th><th>数量</th><th>时间</th></tr>`;
+        coinRecords.forEach((item) => {
+            let typeText = item.isTeam === '是' ? `团队(${item.teamCount}人)` : "个人";
+            html += `<tr><td>${typeText}</td><td>${item.leader}</td><td>${item.newbie}</td><td>${item.amount}个</td><td>${item.time}</td></tr>`;
+        });
+        html += `</table>`;
+        showAdminData(html, "🎁 本周接待币记录");
+    }
+
+    function viewHistoryCoins() {
+        let currentWeekTotal = 0;
+        coinRecords.forEach(item => { currentWeekTotal += parseInt(item.amount) || 0; });
+        const grandTotal = totalCoins + currentWeekTotal;
+
+        let html = `<div class="section-header">📜 历史登记记录（按周统计）</div>`;
+        if (historyRecords.length === 0) {
+            html += `<div style="color:#94a3b8; text-align:center; padding: 20px;">暂无历史记录</div>`;
+        } else {
+            historyRecords.forEach((week, index) => {
+                html += `<div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-top: 15px;">`;
+                html += `<div style="color: #ffa502; font-weight: bold; margin-bottom: 5px;">第 ${historyRecords.length - index} 周 (${week.weekStart} 至 ${week.weekEnd}) - 总计 ${week.weekTotal} 个</div>`;
+                html += `<table class="data-table"><tr><th>类型</th><th>带的人</th><th>被带的人</th><th>数量</th><th>时间</th></tr>`;
+                week.data.forEach(item => {
+                    let typeText = item.isTeam === '是' ? `团队(${item.teamCount}人)` : "个人";
+                    html += `<tr><td>${typeText}</td><td>${item.leader}</td><td>${item.newbie}</td><td>${item.amount}个</td><td>${item.time}</td></tr>`;
+                });
+                html += `</table></div>`;
+            });
+        }
+        html += `<div class="grand-total">💰 历史累计总数：${grandTotal} 个新人接待币</div>`;
+        showAdminData(html, "📜 历史登记记录");
+    }
+
+    function viewLastWeekSummary() {
+        const now = new Date(); const dayOfWeek = now.getDay(); const daysSinceMonday = (dayOfWeek === 0) ? 6 : dayOfWeek - 1;
+        const monday = new Date(now); monday.setDate(now.getDate() - daysSinceMonday - 7); monday.setHours(0, 0, 0, 0);
+        const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6); sunday.setHours(23, 59, 59, 999);
+
+        const lastWeekRecords = checkinRecords.filter(r => { const recordDate = new Date(r.date); return recordDate >= monday && recordDate <= sunday; });
+        const lastWeekCoins = coinRecords.filter(r => { const recordDate = new Date(r.time); return recordDate >= monday && recordDate <= sunday; });
+
+        if (lastWeekRecords.length === 0 && lastWeekCoins.length === 0) { alert("上周暂无任何数据！"); return; }
+
+        let html = `<div class="section-header">📅 上周汇总报告 (${monday.toLocaleDateString()} 至 ${sunday.toLocaleDateString()})</div>`;
+        html += `<div class="section-header" style="background: rgba(0,210,255,0.2); color:#00d2ff;">📊 上周工时</div>`;
+
+        if (lastWeekRecords.length === 0) { html += `<div style="color:#94a3b8;">暂无上周打卡数据</div>`; }
+        else {
+            const grouped = {}; 
+            lastWeekRecords.forEach(r => { 
+                if (!grouped[r.icName]) grouped[r.icName] = { totalMinutes: 0 }; 
+                if (r.sessions) {
+                    r.sessions.forEach(s => {
+                        if (s.onTime && s.offTime) {
+                            const on = new Date(s.onTime.replace(' ', 'T'));
+                            const off = new Date(s.offTime.replace(' ', 'T'));
+                            if (off >= on) {
+                                const diffMs = off - on;
+                                grouped[r.icName].totalMinutes += diffMs / 60000;
+                            }
+                        }
+                    });
+                }
+            });
+            html += `<table class="data-table"><tr><th>IC名</th><th>工时</th></tr>`;
+            for (let icName in grouped) { const totalHours = (grouped[icName].totalMinutes / 60).toFixed(2); html += `<tr><td>${icName}</td><td>${totalHours} 小时</td></tr>`; }
+            html += `</table>`;
+        }
+
+        html += `<div class="section-header" style="background: rgba(255,165,0,0.2); color:#ffa502;">🎁 上周接待币记录</div>`;
+        if (lastWeekCoins.length === 0) { html += `<div style="color:#94a3b8;">暂无上周接待币记录</div>`; }
+        else {
+            html += `<table class="data-table"><tr><th>类型</th><th>带的人</th><th>被带的人</th><th>数量</th><th>时间</th></tr>`;
+            lastWeekCoins.forEach((item) => {
+                let typeText = item.isTeam === '是' ? `团队(${item.teamCount}人)` : "个人";
+                html += `<tr><td>${typeText}</td><td>${item.leader}</td><td>${item.newbie}</td><td>${item.amount}个</td><td>${item.time}</td></tr>`;
+            });
+            html += `</table>`;
+        }
+        showAdminData(html, "📅 上周汇总报告");
+    }
+
+    function checkWeeklyReminder() { const now = new Date(); const dayOfWeek = now.getDay(); const todayStr = now.toDateString(); const lastReminder = localStorage.getItem(WEEKLY_REMINDER_KEY); if (dayOfWeek === 1 && lastReminder !== todayStr) { localStorage.setItem(WEEKLY_REMINDER_KEY, todayStr); document.getElementById('weeklyReminderModal').classList.add('active'); } }
+    function closeWeeklyReminder() { document.getElementById('weeklyReminderModal').classList.remove('active'); }
+
+    window.onload = function() { 
+        autoArchiveOnMonday();
+        updateUI(); 
+        checkDisclaimer();
+        checkWeeklyReminder(); 
+    };
+  </script>
+</body>
+</html>
